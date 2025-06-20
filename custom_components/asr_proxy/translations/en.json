@@ -1,0 +1,41 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup ASR Proxy",
+        "description": "Enter the connection details for your primary Wyoming Speech-to-Text (STT) server. You can optionally provide a fallback server.",
+        "data": {
+          "stt_host": "Primary STT Server Host",
+          "stt_port": "Primary STT Server Port",
+          "fallback_host": "Fallback STT Server Host (Optional)",
+          "fallback_port": "Fallback STT Server Port (Optional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the primary STT server. Please check the host and port.",
+      "unknown": "An unknown error occurred while trying to connect."
+    },
+    "abort": {
+      "already_configured": "A device with this primary host and port is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "ASR Proxy with Fallback Settings",
+        "description": "You can change the connection details for your STT servers here. Changes will require a restart of Home Assistant.",
+        "data": {
+          "stt_host": "Primary STT Server Host",
+          "stt_port": "Primary STT Server Port",
+          "fallback_host": "Fallback STT Server Host (Optional)",
+          "fallback_port": "Fallback STT Server Port (Optional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the primary STT server. Please check the new host and port.",
+      "unknown": "An unknown error occurred."
+    }
+  }
+}

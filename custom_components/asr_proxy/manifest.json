@@ -1,0 +1,11 @@
+{
+  "domain": "asr_proxy",
+  "name": "ASR Proxy",
+  "documentation": "https://github.com/mitrokun/asr_proxy",
+  "issue_tracker": "https://github.com/mitrokun/asr_proxy/issues",
+  "codeowners": ["@mitrokun"],
+  "config_flow": true,
+  "iot_class": "local_push",
+  "requirements": [],
+  "version": "0.0.1"
+}

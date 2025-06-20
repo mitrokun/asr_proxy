@@ -1,0 +1,19 @@
+# --- START OF FILE const.py ---
+
+DOMAIN = "asr_proxy"
+
+CONF_STT_HOST = "stt_host"
+CONF_STT_PORT = "stt_port"
+
+CONF_FALLBACK_HOST = "fallback_host"
+CONF_FALLBACK_PORT = "fallback_port"
+
+CONF_LANGUAGE = "language"
+
+SAMPLE_RATE = 16000
+SAMPLE_WIDTH = 2
+SAMPLE_CHANNELS = 1
+
+DEFAULT_STT_HOST = "192.168.1.1"
+DEFAULT_STT_PORT = 10300
+DEFAULT_LANGUAGE = "en"
