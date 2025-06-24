@@ -1,5 +1,6 @@
 # --- stt.py ---
 
+import time 
 import asyncio
 import logging
 from typing import AsyncIterable, List, Optional
@@ -34,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Timeout for establishing a TCP connection to the primary server.
 # If the server doesn't accept the connection within this time, it's considered unavailable.
-PRIMARY_CONNECT_TIMEOUT = 0.05  # seconds
+PRIMARY_CONNECT_TIMEOUT = 0.064  # seconds
 
 # General timeout for the entire ASR operation on any given server.
 # This prevents the pipeline from hanging if a connected server becomes unresponsive.
