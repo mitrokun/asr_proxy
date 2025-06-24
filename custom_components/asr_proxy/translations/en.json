@@ -24,7 +24,7 @@
     "step": {
       "init": {
         "title": "ASR Proxy with Fallback Settings",
-        "description": "You can change the connection details for your STT servers here. Changes will require a restart of Home Assistant.",
+        "description": "You can change the connection details for your STT servers here.",
         "data": {
           "stt_host": "Primary STT Server Host",
           "stt_port": "Primary STT Server Port",
