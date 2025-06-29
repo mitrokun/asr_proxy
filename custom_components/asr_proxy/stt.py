@@ -183,8 +183,11 @@ class AsrProxyProvider(stt.SpeechToTextEntity):
             except Exception as e:
                 _LOGGER.error("Fallback server also failed: %s", e)
 
-        _LOGGER.error("Failed to transcribe speech. All configured servers failed or were unavailable.")
-        return SpeechResult(None, SpeechResultState.ERROR)
+        _LOGGER.debug(
+            "Failed to transcribe speech. All configured servers failed or were "
+            "unavailable. Returning empty result to cleanly terminate the pipeline."
+        )
+        return SpeechResult("", SpeechResultState.SUCCESS)
 
 
     async def _try_transcribe(
