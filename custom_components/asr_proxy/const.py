@@ -1,5 +1,3 @@
-# --- START OF FILE const.py ---
-
 DOMAIN = "asr_proxy"
 
 CONF_STT_HOST = "stt_host"
@@ -9,6 +7,8 @@ CONF_FALLBACK_HOST = "fallback_host"
 CONF_FALLBACK_PORT = "fallback_port"
 
 CONF_LANGUAGE = "language"
+
+CONF_SPEECH_TO_PHRASE = "speech_to_phrase" 
 
 SAMPLE_RATE = 16000
 SAMPLE_WIDTH = 2

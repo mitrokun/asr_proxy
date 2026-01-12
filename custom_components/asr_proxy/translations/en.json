@@ -26,6 +26,7 @@
         "title": "ASR Proxy with Fallback Settings",
         "description": "You can change the connection details for your STT servers here.",
         "data": {
+          "speech_to_phrase": "Speech2Phrase mode (Data buffering)",
           "stt_host": "Primary STT Server Host",
           "stt_port": "Primary STT Server Port",
           "fallback_host": "Fallback STT Server Host (Optional)",

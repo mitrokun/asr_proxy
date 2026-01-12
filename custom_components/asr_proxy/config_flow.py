@@ -12,6 +12,7 @@ from .const import (
     CONF_STT_PORT,
     CONF_FALLBACK_HOST,
     CONF_FALLBACK_PORT,
+    CONF_SPEECH_TO_PHRASE,  # Наша новая опция
     DEFAULT_STT_HOST,
     DEFAULT_STT_PORT,
 )
@@ -63,7 +64,6 @@ class AsrProxyConfigFlow(ConfigFlow, domain=DOMAIN):
 class AsrProxyOptionsFlow(OptionsFlowWithConfigEntry):
     """Handle an options flow for ASR Proxy."""
 
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -83,14 +83,15 @@ class AsrProxyOptionsFlow(OptionsFlowWithConfigEntry):
                 errors["base"] = "unknown"
             else:
                 # Create a new entry with the updated options.
-                # HA will store this in `config_entry.options`.
                 return self.async_create_entry(title="", data=user_input)
 
         # Build form, pre-filling with current values from options or initial data.
-        # self.config_entry.options contains the values from the last options flow save.
-        # self.config_entry.data contains the values from the initial setup.
-        # Using .get() on options first provides the correct override behavior.
         data_schema = vol.Schema({
+            vol.Optional(
+                CONF_SPEECH_TO_PHRASE,
+                description={"suggested_value": self.options.get(CONF_SPEECH_TO_PHRASE, False)},
+                default=False
+            ): bool,
             vol.Required(
                 CONF_STT_HOST,
                 default=self.options.get(

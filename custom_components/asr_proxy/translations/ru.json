@@ -26,10 +26,14 @@
         "title": "Настройки ASR Proxy с резервированием",
         "description": "Здесь вы можете изменить данные для подключения к вашим STT-серверам.",
         "data": {
+          "speech_to_phrase": "Speech2Phrase mode",
           "stt_host": "Хост основного STT-сервера",
           "stt_port": "Порт основного STT-сервера",
           "fallback_host": "Хост резервного STT-сервера (необязательно)",
           "fallback_port": "Порт резервного STT-сервера (необязательно)"
+        },
+        "data_description": {
+          "speech_to_phrase": "Включить, если перым сервером выбран SpeechtoPhrase"
         }
       }
     },
