@@ -1,5 +1,3 @@
-# --- START OF FILE __init__.py ---
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
