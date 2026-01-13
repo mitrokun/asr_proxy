@@ -1,5 +1,3 @@
-# --- stt.py ---
-
 import time 
 import asyncio
 import logging
