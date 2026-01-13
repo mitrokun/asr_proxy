@@ -1,5 +1,3 @@
-# --- START OF FILE const.py ---
-
 DOMAIN = "asr_proxy"
 
 CONF_STT_HOST = "stt_host"
