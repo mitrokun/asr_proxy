@@ -1,4 +1,5 @@
 import asyncio
+import contextvars
 import logging
 import time
 from typing import AsyncIterable, List, Optional, Callable
@@ -35,7 +36,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 # Maximum time to wait for server response (chunks or final) before aborting
-# Resets every time a chunk is received.
 INACTIVITY_TIMEOUT = 10.0
 
 # Timeout for quick connection check
@@ -43,6 +43,19 @@ CONNECTION_TIMEOUT = 0.064
 
 # Total operation timeout for buffered mode fallback
 BUFFERED_OPERATION_TIMEOUT = 10.0
+
+
+def get_stt_stream_callback_var(hass: HomeAssistant) -> contextvars.ContextVar:
+    """Get or create the global STT streaming context variable.
+    
+    This shared context variable allows any calling application to register 
+    a generic callback to receive real-time text chunks.
+    """
+    if "stt_stream_callback_var" not in hass.data:
+        hass.data["stt_stream_callback_var"] = contextvars.ContextVar(
+            "stt_stream_callback", default=None
+        )
+    return hass.data["stt_stream_callback_var"]
 
 
 async def async_setup_entry(
@@ -59,6 +72,7 @@ async def async_setup_entry(
                 entry_data["primary_api"],
                 entry_data.get("fallback_api"),
                 config_entry,
+                hass,
             )
         ]
     )
@@ -86,12 +100,15 @@ class AsrProxyProvider(stt.SpeechToTextEntity):
         primary_api: SttApi,
         fallback_api: Optional[SttApi],
         config_entry: ConfigEntry,
+        hass: HomeAssistant,
     ) -> None:
+        """Initialize the ASR Proxy Provider."""
         self._attr_unique_id = unique_id
         self._attr_name = f"ASR Proxy ({primary_api.host})"
         self.primary_api = primary_api
         self.fallback_api = fallback_api
         self._config_entry = config_entry
+        self.hass = hass
 
     @property
     def supported_languages(self) -> list[str]:
@@ -178,7 +195,7 @@ class AsrProxyProvider(stt.SpeechToTextEntity):
         if await _check_connection(self.primary_api, CONNECTION_TIMEOUT):
             target_api = self.primary_api
         elif self.fallback_api and await _check_connection(self.fallback_api, CONNECTION_TIMEOUT):
-            _LOGGER.warning("Primary unreachable, using fallback: %s", self.fallback_api.host)
+            _LOGGER.debug("Primary unreachable, using fallback: %s", self.fallback_api.host)
             target_api = self.fallback_api
         
         if not target_api:
@@ -228,16 +245,15 @@ class AsrProxyProvider(stt.SpeechToTextEntity):
                 writer_task = asyncio.create_task(self._send_audio_to_client(client, stream))
 
                 while not reader_task.done():
-                    # We wait for EITHER the reader to finish OR the writer to finish.
+                    # Wait for EITHER reader or writer to finish.
                     # Timeout ensures we wake up to check the watchdog.
-                    
                     tasks_to_wait = {reader_task}
                     if writer_task:
                         tasks_to_wait.add(writer_task)
 
                     done, _ = await asyncio.wait(
                         tasks_to_wait,
-                        timeout=0.5, # Check watchdog every 0.5s
+                        timeout=0.5,
                         return_when=asyncio.FIRST_COMPLETED,
                     )
 
@@ -248,19 +264,16 @@ class AsrProxyProvider(stt.SpeechToTextEntity):
 
                     # Case B: Inactivity Watchdog
                     if time.time() - last_activity_time > INACTIVITY_TIMEOUT:
-                        _LOGGER.warning("Server %s inactive for %.1fs (No chunks received). Aborting.", api.host, INACTIVITY_TIMEOUT)
+                        _LOGGER.warning("Server %s inactive for %.1fs. Aborting.", api.host, INACTIVITY_TIMEOUT)
                         break
 
-                    # Case C: Audio Stream Ended (User stopped speaking / File upload finished)
+                    # Case C: Audio Stream Ended
                     if writer_task and writer_task in done:
                         if not writer_task.cancelled() and not writer_task.exception():
                             _LOGGER.debug("Audio sent to %s. Waiting for processing...", api.host)
                             await client.write_event(AudioStop().event())
-                            # IMPORTANT: We do NOT break here. We set writer to None
-                            # and continue looping to wait for reader_task, relying on the Watchdog.
                             writer_task = None
                         else:
-                            # Writer crashed or was cancelled
                             _LOGGER.warning("Audio upload failed or cancelled.")
                             break
 
@@ -283,6 +296,9 @@ class AsrProxyProvider(stt.SpeechToTextEntity):
         on_activity: Callable[[], None]
     ) -> Optional[str]:
         """Reads events from server, updates watchdog, handles chunks."""
+        # Retrieve the global ContextVar from Home Assistant data registry
+        callback_var = get_stt_stream_callback_var(self.hass)
+
         while True:
             event = await client.read_event()
             if event is None:
@@ -293,11 +309,19 @@ class AsrProxyProvider(stt.SpeechToTextEntity):
             on_activity()
 
             if TranscriptChunk.is_type(event.type):
-                # We can log this for debug, but we don't return until Final Transcript
                 chunk = TranscriptChunk.from_event(event)
-                # _LOGGER.debug("Partial: '%s'", chunk.text) 
+                
+                # Check if a streaming callback is registered in the current async context
+                callback = callback_var.get()
+                if callback and chunk.text:
+                    try:
+                        # Forward the raw chunk to the caller-defined callback
+                        callback(chunk.text)
+                    except Exception as e:
+                        _LOGGER.error("Error executing STT stream callback: %s", e)
                 continue
 
+            # Final result
             if Transcript.is_type(event.type):
                 return Transcript.from_event(event).text
 
